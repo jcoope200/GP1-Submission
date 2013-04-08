@@ -1,0 +1,8 @@
+#include "GameResources.h"
+
+// --------------------------------------
+// Icons
+// --------------------------------------
+IDI_MyWindowIcon	ICON	"Images\\stephen icon.ico"
+///IDC_GUNSIGHT		CURSOR	"Gun.cur"
+IDF_MyFont			FONT	"Fonts\\Metroid Prime Hunters.fon"
