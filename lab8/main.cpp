@@ -49,7 +49,7 @@ static cD3DManager* d3dMgr = cD3DManager::getInstance();
 // Get a reference to the DirectX Sprite renderer Manager 
 static cD3DXSpriteMgr* d3dxSRMgr = cD3DXSpriteMgr::getInstance();
 
-float rot = 0.0f;
+//float rot = 0.0f;
 D3DXVECTOR2 stephenTrans = D3DXVECTOR2(100,375);
 D3DXVECTOR2 stephenScale = D3DXVECTOR2(1.0f,1.0f);
 D3DXVECTOR2 EnemyTrans = D3DXVECTOR2(300,300);
@@ -507,7 +507,7 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLi
 			}
 			if(game == true)
 			{
-				D3DXMatrixTransformation2D(&stephenMatrix, NULL,0.0f,&stephenScale,&(stephen.getSpriteCentre()),rot,&stephenTrans);
+				//D3DXMatrixTransformation2D(&stephenMatrix, NULL,0.0f,&stephenScale,&(stephen.getSpriteCentre()),rot,&stephenTrans);
 				QueryPerformanceCounter((LARGE_INTEGER*)&currentTime);
 				float dt = (currentTime - previousTime)*sPC;
 				EnemyPos = D3DXVECTOR3(EnemyTrans.x,EnemyTrans.y,0);
