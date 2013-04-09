@@ -5,39 +5,32 @@ Main entry point for the application
 =================
 */
 
-#include "GameConstants.h"
-#include "GameResources.h"
-#include "cD3DManager.h"
+#include "GameConstants.h"	
+#include "GameResources.h"	//define font and window icon
+#include "cD3DManager.h" 
 #include "cD3DXSpriteMgr.h"
 #include "cD3DXTexture.h"
-#include "cSprite.h"
-#include "cExplosion.h"
-#include "cStephen.h"
-#include "cEnemy.h"
-#include "cXAudio.h"
-#include "cD3DXFont.h"
+#include "cSprite.h" //these all handle the physical appearance of the game
+#include "cExplosion.h" //handles the explosion graphic
+#include "cStephen.h" //handles the player character
+#include "cEnemy.h" //handles the enemy characters
+#include "cXAudio.h" //handles the game audio
+#include "cD3DXFont.h" //handles the game font
 #include <strsafe.h>
 
-using namespace std;
-bool game = false;
-bool gameWater = false;
-bool gameLightning = false;
-bool gameFire = false;
-bool gameSpace = false;
-bool gameCity = false;
-bool gameForest = false;
-bool gameIce = false;
-bool startmenu = true;
-bool endscreen = false;
-bool music = false;
-//bool musicWater = false;
-//bool musicLightning = false;
-//bool musicFire = false;
-//bool musicSpace = false;
-//bool musicCity = false;
-//bool musicForest = false;
-//bool musicIce = false;
-//bool musicEnd = false;
+using namespace std;	//standard namespace
+bool game = false;	//are we in the gameplay mode?
+bool gameWater = false;	//are we in the water level?
+bool gameLightning = false;	//are we in the lightning level?
+bool gameFire = false;	//are we in the fire level?
+bool gameSpace = false; //are we in the space level?
+bool gameCity = false; //are we in the city level?
+bool gameForest = false; //are we in the forest level?
+bool gameIce = false;	//are we in the ice level?
+bool startmenu = true; //are we in the start menu?
+bool endscreen = false;	//are we in the end screen?
+bool music = false; //is the music on?
+
 RECT start;
 
 HINSTANCE hInst; // global handle to hold the application instance
@@ -49,47 +42,37 @@ static cD3DManager* d3dMgr = cD3DManager::getInstance();
 // Get a reference to the DirectX Sprite renderer Manager 
 static cD3DXSpriteMgr* d3dxSRMgr = cD3DXSpriteMgr::getInstance();
 
-//float rot = 0.0f;
-D3DXVECTOR2 stephenTrans = D3DXVECTOR2(100,375);
-D3DXVECTOR2 stephenScale = D3DXVECTOR2(1.0f,1.0f);
-D3DXVECTOR2 EnemyTrans = D3DXVECTOR2(300,300);
-RECT clientBounds;
+float rot = 0.0f; //Stephen's rotation value
+D3DXVECTOR2 stephenTrans = D3DXVECTOR2(100,375); //Stephen's position on spawn
+D3DXVECTOR2 stephenScale = D3DXVECTOR2(1.0f,1.0f); //Stephen's size
+D3DXVECTOR2 EnemyTrans = D3DXVECTOR2(300,300); //The enemy position
+RECT clientBounds; //the boundaries of the window aka game space
 
-int EnemyPos = clientBounds.right/2 - 200;
-vector<cEnemy*> aEnemy;
+int EnemyPos = clientBounds.right/2 - 200; //the enemies will be positioned here, slightly off centre
+vector<cEnemy*> aEnemy; //holds all enemies
 vector<cEnemy*>::const_iterator iterRO;
-vector<cEnemy*>::iterator george;
+vector<cEnemy*>::iterator george; //iterators to point to specific enemies
 vector<cEnemy*>::iterator index;
 
 TCHAR szTempOutput[30];
 
-bool gHit = false;
-int gEnemiesKilled = 0;
-char gEnemiesKilledStr[50];
-D3DXVECTOR3 expPos;
-POINT ptStephen;
-list<cExplosion*> gExplode;
-list<cStephen*> gStephen;
-POINT pstephenPos;
+bool gHit = false; //have we hit an enemy?
+int gEnemiesKilled = 0; //number of dead enemies
+char gEnemiesKilledStr[50]; //number to display
+D3DXVECTOR3 expPos; //position of the explosion
+POINT ptStephen; //the exact point stephen makes contact
+list<cExplosion*> gExplode; //contains the explosion
+list<cStephen*> gStephen; //contains Stephen
+POINT pstephenPos; //the position of the contact point
 
 
-list<cStephen*>::iterator pete = gStephen.begin();
+list<cStephen*>::iterator pete = gStephen.begin(); //point iterator Pete at Stephen
 
-cXAudio gAttackSound;
-cXAudio gameMusic;
-//cXAudio waterMusic;
-//cXAudio lightningMusic;
-//cXAudio fireMusic;
-//cXAudio spaceMusic;
-//cXAudio cityMusic;
-//cXAudio forestMusic;
-//cXAudio iceMusic;
-//cXAudio endMusic;
+cXAudio gAttackSound; //the sound effect for attacking
+cXAudio gameMusic; //the background music
 
-LPCSTR background = "Images\\menu background.png";
-LPDIRECT3DSURFACE9 aSurface;
-
-
+LPCSTR background = "Images\\menu background.png"; //the background image for the main menu
+LPDIRECT3DSURFACE9 aSurface; 
 
 /*
 ==================================================================
@@ -103,10 +86,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	// Check any available messages from the queue
 	switch (message)
 	{
+	//if the user is pressing a key
 	case WM_KEYDOWN:
 		{
+			//if the user is pressing the left arrow
 			if(wParam == VK_LEFT)
 			{
+				//if stephen isn't touching the left side of the window
+				//move him left by ten units
 				if(pstephenPos.x>(clientBounds.left))
 				{
 					pstephenPos.x -=10.0f;
@@ -114,8 +101,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					return 0;
 				}
 			}
+			//if the user is pressing the right arrow
 			if(wParam == VK_RIGHT)
 			{
+				//if stephen isn't touching the right side of the window minus 90 units
+				//move him right by ten units
 				if(pstephenPos.x<(clientBounds.right - 90))
 				{
 					pstephenPos.x += 10.0f;
@@ -123,8 +113,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 					return 0;
 				}
 			}
+			//if the user is pressing 1
 			if(wParam == '1')
 			{
+				//turn all other levels off except for the water level
 				startmenu = false;
 				gameLightning = false;
 				gameFire = false;
@@ -132,16 +124,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				gameCity = false;
 				gameForest = false;
 				gameIce = false;
-				//menuMusic.~cXAudio();
 				game = true;
 				gameWater = true;
-				//musicWater = false;
-				//waterMusic.playSound(L"Sounds\\buoybase.wav",false);
 				return 0;
-				
 			}
+			//if the user is pressing 2
 			if(wParam == '2')
 			{
+				//turn all other levels off except for the lightning level
 				startmenu = false;
 				gameWater = false;
 				gameFire = false;
@@ -150,14 +140,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				gameForest = false;
 				gameIce = false;
 				game = true;
-				//waterMusic.~cXAudio();
 				gameLightning = true;
-				//musicLightning = true;
-				//lightningMusic.playSound(L"Sounds\\mutecity.wav",false);
 				return 0;
 			}
+			//if the user is pressing 3
 			if(wParam == '3')
 			{
+				//turn off all levels apart from the fire level
 				startmenu = false;
 				gameWater = false;
 				gameLightning = false;
@@ -166,14 +155,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				gameForest = false;
 				gameIce = false;
 				game = true;
-				//lightningMusic.~cXAudio();
 				gameFire = true;
-				//musicFire = true;
-				//fireMusic.playSound(L"Sounds\\metaridley.wav",false);
 				return 0;
 			}
+			//if the user is pressing 4
 			if(wParam == '4')
 			{
+				//turn off all levels apart from the space level
 				startmenu = false;
 				gameWater = false;
 				gameLightning = false;
@@ -182,15 +170,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				gameForest = false;
 				gameIce = false;
 				game = true;
-				//fireMusic.~cXAudio();
 				gameSpace = true;
-				//musicSpace = true;
-				//spaceMusic.playSound(L"Sounds\\revenge.wav",false);
 				return 0;
-				
 			}
+			//if the user is pressing 5
 			if(wParam == '5')
 			{
+				//turn off all levels apart from the city level
 				startmenu = false;
 				gameWater = false;
 				gameLightning = false;
@@ -199,15 +185,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				gameForest = false;
 				gameIce = false;
 				game = true;
-				//spaceMusic.~cXAudio();
 				gameCity = true;
-				//musicCity = true;
-				//cityMusic.playSound(L"Sounds\\spearpillar.wav",false);
 				return 0;
-				
 			}
+			//if the user is pressing 6
 			if(wParam == '6')
 			{
+				//turn off all levels apart from the forest level
 				startmenu = false;
 				gameWater = false;
 				gameLightning = false;
@@ -216,15 +200,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				gameCity = false;
 				gameIce = false;
 				game = true;
-				//cityMusic.~cXAudio();
 				gameForest = true;
-				//musicForest = true;
-				//forestMusic.playSound(L"Sounds\\medley.wav",false);
 				return 0;
-				
 			}
+			//if the user is pressing 7
 			if(wParam == '7')
 			{
+				//turn off all levels apart from the ice level
 				startmenu = false;
 				gameWater = false;
 				gameLightning = false;
@@ -233,15 +215,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				gameCity = false;
 				gameForest = false;
 				game = true;
-				//forestMusic.~cXAudio();
 				gameIce = true;
-				//musicIce = true;
-				//iceMusic.playSound(L"Sounds\\snowman.wav",false);
 				return 0;
-				
 			}
+			//if the user is pressing 8
 			if(wParam=='8')
 			{
+				//turn off all levels and the gameplay and take the user to the end screen
 				startmenu = false;
 				gameWater = false;
 				gameLightning = false;
@@ -251,15 +231,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				gameForest = false;
 				gameIce == false;
 				game = false;
-				//iceMusic.~cXAudio();
 				endscreen = true;
-				//endMusic.playSound(L"Sounds\\gabbag.wav", false);
-				//startmenu = true;
 				return 0;
-				
 			}
+			//if the user is pressing 9
 			if(wParam == '9')
 			{
+				//turn off all levels and gameplay and take them to the start menu
 				gameWater = false;
 				gameLightning = false;
 				gameFire = false;
@@ -269,42 +247,43 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				gameIce = false;
 				game = false;
 				endscreen == false;
-				//endMusic.~cXAudio();
 				startmenu = true;
-				//cXAudio menuMusic;
-				//menuMusic.playSound(L"Sounds\\gabbag.wav",false);
 				return 0;
-				
 			}
-
-
+			//if the user is pressing the space bar
 			if(wParam == VK_SPACE)
 			{
+				//if we are in gameplay, i.e. one of the levels
 				if(game == true)
 					{
+						//point the iterator George at the beginning of the enemy vector
 						POINT mouseXY;
 						mouseXY.x = LOWORD(lParam);
 						mouseXY.y = HIWORD(lParam);
 						george = aEnemy.begin();
+							//while george is in the enemy vector and there isn't a hit
 							while (george != aEnemy.end() && !gHit)
 							{
+								//if an enemy's bounding rectangle is within Stephen's bounding rectangle
 								if ( (*george)->insideRect((*george)->getBoundingRect(), pstephenPos))
 								{
+									//a hit has occurred and that enemy will be eliminated
+									//add one to the kill counter and display this
 									OutputDebugString("Hit!\n");
 									gHit = true;
-							
 									george = aEnemy.erase(george);
 									gEnemiesKilled++;
 									sprintf_s(gEnemiesKilledStr, 50, "Kills: %d", gEnemiesKilled);
 								}
 								else
 								{
+									//if not then move on to the next enemy and check again
 									++george;
 								}
 							}
+						//play the attack sound effect whether or not there's a hit
 						expPos = D3DXVECTOR3((float)pstephenPos.x,(float)pstephenPos.y-23, 0.0f);
 						gAttackSound.playSound(L"Sounds\\dale.wav",false);
-
 						StringCchPrintf(szTempOutput, STRSAFE_MAX_CCH, TEXT("Mouse: lLastX=%d lLastY=%d\r\n"), LOWORD(lParam), HIWORD(lParam));
 						OutputDebugString(szTempOutput);
 						gHit = false;
@@ -407,20 +386,27 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLi
 
 	GetClientRect(wndHandle,&clientBounds);
 
-	float fpsRate = 1.0f/25.0f;
+	float fpsRate = 1.0f/25.0f;	//the frame rate the game will run at
 
-	D3DXVECTOR3 EnemyPos;
-	srand((unsigned int)time(NULL));
-	int numEnemies = 5;//(rand()%5+1);
+	D3DXVECTOR3 EnemyPos;	//the position of the enemy
+	srand((unsigned int)time(NULL)); //seed the random number generator
+	int numEnemies = 5; //there will be five enemies on spawn
 
+	//a loop that stops when we run out of enemies
 	for(int loop = 0; loop < numEnemies; loop++)
 	{
+		//if it's one of the first three enemies
 		if(loop<3){
+			//draw the enemy at these calculated co-ordinates
 			EnemyPos = D3DXVECTOR3(160+loop*160,(float)clientBounds.top+150,0);
 		}
 		else{
+			//draw enemies after the first three under the first three
 			EnemyPos = D3DXVECTOR3(160+((loop-3)*160),(float)clientBounds.top+300,0);
 		}
+		//draw the enemy sprite
+		//seed another number generator
+		//make all the enemies fly in this pattern
 		aEnemy.push_back(new cEnemy(EnemyPos,d3dMgr->getTheD3DDevice(),"Images\\ridley.png"));
 		srand((unsigned int)time(NULL));
 		aEnemy[loop]->setTranslation(D3DXVECTOR2(5.0f,(rand()%+(-5))));
@@ -429,19 +415,19 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLi
 	LPDIRECT3DSURFACE9 aSurface;				// the Direct3D surface
 	LPDIRECT3DSURFACE9 theBackbuffer = NULL;  // This will hold the back buffer
 	
-	cD3DXFont * EnemyFont = new cD3DXFont(d3dMgr->getTheD3DDevice(),hInstance, "Metroid Prime: Hunters3");
-	cD3DXFont * MenuFont = new cD3DXFont(d3dMgr->getTheD3DDevice(),hInstance, "Metroid Prime: Hunters3");
+	cD3DXFont * EnemyFont = new cD3DXFont(d3dMgr->getTheD3DDevice(),hInstance, "Metroid Prime: Hunters3");	//the font for the kill counter
+	cD3DXFont * MenuFont = new cD3DXFont(d3dMgr->getTheD3DDevice(),hInstance, "Metroid Prime: Hunters3");	//the font for the miscellaneous messages
 
-	RECT textPos;
+	RECT textPos;	//the position of the kill counter
 	SetRect(&textPos, 30, 10, 400, 100);
-	RECT menuTextPos;
+	RECT menuTextPos; // the position of the messages
 	SetRect(&menuTextPos, 20, 10, 600, 1000);
-	D3DXVECTOR3 stephenPos = D3DXVECTOR3(600, 600, 0);
-	D3DXVECTOR3 aEnemyPos;
+	D3DXVECTOR3 stephenPos = D3DXVECTOR3(600, 600, 0); //the position of Stephen
+	D3DXVECTOR3 aEnemyPos; //the position of the enemies
 	
-	cSprite stephen (stephenPos, d3dMgr->getTheD3DDevice(), "Images\\stephen.png");
+	cSprite stephen (stephenPos, d3dMgr->getTheD3DDevice(), "Images\\stephen.png"); //image for Stephen's sprite
 	stephen.setTranslation(D3DXVECTOR2(5.0f, 0.0f));
-	D3DXMATRIX stephenMatrix;
+	D3DXMATRIX stephenMatrix; //stephen's transform matrix
 	
 	MSG msg;
 	ZeroMemory( &msg, sizeof( msg ) );
@@ -449,9 +435,10 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLi
 	// Create the background surface
 	aSurface = d3dMgr->getD3DSurfaceFromFile(background);
 
-	gameMusic.playSound(L"Sounds\\gabbag.wav",true);
+	gameMusic.playSound(L"Sounds\\gabbag.wav",true);	//the game's music
 
 	QueryPerformanceCounter((LARGE_INTEGER*)&currentTime);
+	//while we're still playing
 	while( msg.message!=WM_QUIT )
 	{
 		// Check the message queue
@@ -464,22 +451,25 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLi
 		{
 			
 			// Game code goes here
+			//if the start menu's open
 			if(startmenu == true && music == false)
 			{
-				
+				//draw the background and render the text
 				background = "Images\\menu background.png";
 				aSurface = d3dMgr->getD3DSurfaceFromFile(background);
 				d3dMgr->beginRender();
 				theBackbuffer = d3dMgr->getTheBackBuffer();
 				d3dMgr->updateTheSurface(aSurface, theBackbuffer);
 				d3dMgr->releaseTheBackbuffer(theBackbuffer);
-				MenuFont->printText("Stephen Stills' Fabulous Adventure\n\n\nPress any number from 1-7 to begin! \nSwap backgrounds! There are seven! \nPress SPACE to kill Ridleys!", menuTextPos);
+				MenuFont->printText("Stephen Stills' Fabulous Adventure\n\n\n\nPress any number from 1-7 to begin! \nUse LEFT and RIGHT to move! \nSwap backgrounds! There are seven! \nPress SPACE to kill Ridleys!", menuTextPos);
 				d3dMgr->endRender();
-				//music = true;
-				
 			}
+			//if the endscreen's open
 			if(endscreen == true)
 			{
+				//the gameplay itself isn't happening
+				//draw the background and render the text
+				//respawn another five enemies which won't be seen until we go back into a level using the same process as before
 				game = false;
 				background = "Images\\menu background.png";
 				aSurface = d3dMgr->getD3DSurfaceFromFile(background);
@@ -505,9 +495,11 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLi
 				endscreen = false;
 				music = false;
 			}
+			//if we're playing the actual game
 			if(game == true)
 			{
-				//D3DXMatrixTransformation2D(&stephenMatrix, NULL,0.0f,&stephenScale,&(stephen.getSpriteCentre()),rot,&stephenTrans);
+				//work out the positions of Stephen and the enemies along with displaying how many kills we have
+				D3DXMatrixTransformation2D(&stephenMatrix, NULL,0.0f,&stephenScale,&(stephen.getSpriteCentre()),rot,&stephenTrans);
 				QueryPerformanceCounter((LARGE_INTEGER*)&currentTime);
 				float dt = (currentTime - previousTime)*sPC;
 				EnemyPos = D3DXVECTOR3(EnemyTrans.x,EnemyTrans.y,0);
@@ -522,35 +514,42 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLi
 				*/
 				if(timeElapsed > fpsRate)
 				{
-			
+						//if we're in the water level draw the water background
 						if(gameWater == true)
 						{
 							aSurface = d3dMgr->getD3DSurfaceFromFile("Images\\water background.png");
 						}
+						//if we're in the lightning level draw the lightning background
 						if(gameLightning == true)
 						{
 							aSurface = d3dMgr->getD3DSurfaceFromFile("Images\\lightning background.png");
 						}
+						//if we're in the fire level draw the fire background
 						if(gameFire == true)
 						{
 							aSurface = d3dMgr->getD3DSurfaceFromFile("Images\\fire background.png");
 						}
+						//if we're in the space level draw the space background
 						if(gameSpace == true)
 						{
 							aSurface = d3dMgr->getD3DSurfaceFromFile("Images\\space background.png");
 						}
+						//if we're in the city level draw the city background
 						if(gameCity == true)
 						{
 							aSurface = d3dMgr->getD3DSurfaceFromFile("Images\\city background.png");
 						}
+						//if we're in the forest level draw the forest background
 						if(gameForest == true)
 						{
 							aSurface = d3dMgr->getD3DSurfaceFromFile("Images\\forest background.png");
 						}
+						//if we're in the ice level draw the ice background
 						if(gameIce == true)
 						{
 							aSurface = d3dMgr->getD3DSurfaceFromFile("Images\\ice background.png");
 						}
+						//if we're in the end screen draw that background
 						if(endscreen == true)
 						{
 							aSurface = d3dMgr->getD3DSurfaceFromFile("Images\\menu background.png");
@@ -595,6 +594,9 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLi
 						}
 
 	
+						//the rest of the loop is dedicated to drawing everything
+						//the enemies, followed by Stephen
+						//then depending on the level draw text that explains what level you're in and to press 8 to exit to the main screen
 						d3dMgr->beginRender();
 						theBackbuffer = d3dMgr->getTheBackBuffer();
 						d3dMgr->updateTheSurface(aSurface, theBackbuffer);
